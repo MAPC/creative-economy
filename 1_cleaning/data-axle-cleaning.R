@@ -1,6 +1,6 @@
 # Script: InfoUSA data processing and cleaning
 # Author: Seleeke Flingai
-# Date Last Modified: April 30, 2020
+# Date Last Modified: December 19, 2022 by RBowers
 
 rm(list=ls())
 
@@ -18,23 +18,29 @@ raw.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Pla
 modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified"
 gis.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/GIS"
 
-# load InfoUSA raw files (2016)
+# load InfoUSA raw files (April 2021)
 setwd(raw.data.path)
-infousa <- read.csv("infousa2016.csv", stringsAsFactors = FALSE)
+infousa <- read.csv("April_2021 - Massachusetts_New.csv", stringsAsFactors = FALSE)
+
+#add an OBJECT ID field
+infousa$OBJECTID <- seq.int(nrow(infousa))
 
 ####### DATA CLEANING: COMBINE INFOUSA RAW FILES AND dplyr::select ON VARIABLES OF INTEREST #######
 # dplyr::select our infousa variables of interest 
 # also, added new variables for the four-digit and six-digit NAICS code 
-# (taken from the first four or six digits of the 8-digit NAICS_CODE variable)
+# (taken from the first four or six digits of the 8-digit NAICS variable)
+
+# 2022 edit - changing field names to reflect data axle fields
 infousa.mass.temp <- infousa %>%
-  dplyr::select(OBJECTID, COMPANY_NAME,PRIMARY_ADDRESS,PRIMARY_CITY, PRIMARY_STATE, PRIMARY_ZIP10, PRIMARY_STATE_CODE, 
-                COUNTY_CODE, COUNTY_NAME, CENSUS_TRACT, CENSUS_BLOCK_GROUP, LATITUDE, LONGITUDE, NAICS_CODE, NAICS_DESC, 
-                LOCATION_EMPLOYMENT_SIZE_DESC, ACTUAL_LOCATION_EMPLOYMENT_SIZE, LOCATION_SALES_VOLUME_DESC, 
-                ACTUAL_LOCATION_SALES_VOLUME, POPULATION_DESC, AFFLUENT_NEIGHBORHOOD_LOCATION, BIG_BUSINESS, 
-                MEDIUM_SIZE_BUSINESS_ENTREPRENEUR, SMALL_BUSINESS_ENTREPRENEUR, WORK_AT_HOME_BUSINESS, INDIVIDUAL_FIRM_CODE, INDIVIDUAL_FIRM_DESC,
-                CALL_STATUS_CODE, CALL_STATUS_DESC, FEMALE_OWNER_EXEC, NAICSSIX, SOURCE) %>%
-  mutate("NAICS_FOUR" = as.character(substr(as.character(NAICS_CODE), 1, 4))) %>%
-  filter(!is.na(ACTUAL_LOCATION_EMPLOYMENT_SIZE) & PRIMARY_STATE_CODE == 25)  
+  dplyr::select(OBJECTID, CONAME,STADDR,STCITY, STATE, ZIP, STCODE, 
+                CNTYCD, CENSUS, BLKGRP, LATITUDE, LONGITUDE, NAICS, NAICSD, 
+                EMPSIZ, LOCEMP, SALVOL, 
+                SLSVDT, ZPOPCD, WEALTH, BBUSIN, 
+                MBUSIN, SBUSIN, HOME, INDFRM,
+                FEMOWN) %>%
+  mutate("NAICS_FOUR" = as.character(substr(as.character(NAICS), 1, 4))) %>%
+  filter(!is.na(LOCEMP) & STCODE == 25)  
+
 
 
 ####### DATA CLEANING: AGGREGATING NEIGHBORHOODS/VILLAGES INTO THEIR RESPECTIVE MUNICIPALITY #######
@@ -43,328 +49,328 @@ infousa.mass.temp <- infousa %>%
 # Therefore, I've gone through the InfoUSA data and corrected spellings using the gsub function
 # I've also consolidated neighborhoods and villages into their respective municipalities using the ifelse function
 
-infousa.mass.temp$PRIMARY_CITY <- gsub("Manchestr By Sea", "Manchester", infousa.mass.temp$PRIMARY_CITY)
-infousa.mass.temp$PRIMARY_CITY <- gsub("Foxboro", "Foxborough", infousa.mass.temp$PRIMARY_CITY)
-infousa.mass.temp$PRIMARY_CITY <- gsub("North Attleboro", "North Attleborough", infousa.mass.temp$PRIMARY_CITY)
+infousa.mass.temp$STCITY <- gsub("Manchestr By Sea", "Manchester", infousa.mass.temp$STCITY)
+infousa.mass.temp$STCITY <- gsub("Foxboro", "Foxborough", infousa.mass.temp$STCITY)
+infousa.mass.temp$STCITY <- gsub("North Attleboro", "North Attleborough", infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Roxbury", "Roxbury Crossing", "Mission Hill", "Dorchester", "Grove Hall", "Dorchester Ctr",
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Roxbury", "Roxbury Crossing", "Mission Hill", "Dorchester", "Grove Hall", "Dorchester Ctr",
                                                                                "Uphams Corner", "Mattapan", "South Boston", "East Boston", "Charlestown", "Jamaica Plain",
                                                                                "Roslindale", "West Roxbury", "Allston", "Brighton", "Hyde Park"), 
                                          "Boston", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Arlington", "Arlington Hts"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Arlington", "Arlington Hts"), 
                                          "Arlington", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Cambridge", "East Cambridge"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Cambridge", "East Cambridge"), 
                                          "Cambridge", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Newtonville", "Newton Center", "Newton Highlands", "Newton Lower Fls",
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Newtonville", "Newton Center", "Newton Highlands", "Newton Lower Fls",
                                                                                "Newton Upper Fls", "West Newton", "Auburndale", "Chestnut Hill", "Waban", "Nonantum"), 
                                          "Newton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Easton", "South Easton"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Easton", "South Easton"), 
                                          "Easton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Weymouth", "South Weymouth","North Weymouth"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Weymouth", "South Weymouth","North Weymouth"), 
                                          "Weymouth", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Teaticket", "North Falmouth","East Falmouth", "West Falmouth", 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Teaticket", "North Falmouth","East Falmouth", "West Falmouth", 
                                                                                "Woods Hole", "Waquoit"), 
                                          "Falmouth", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Quincy", "Wollaston"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Quincy", "Wollaston"), 
                                          "Quincy", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Hyannis", "Centerville", "Cotuit", "Cummaquid", 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Hyannis", "Centerville", "Cotuit", "Cummaquid", 
                                                                                "Hyannis Port", "Marstons Mills", "Osterville", "West Hyannisport",
                                                                                "West Barnstable"), 
                                          "Barnstable", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("West Somerville"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("West Somerville"), 
                                          "Somerville", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("White Horse Bch", "Manomet"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("White Horse Bch", "Manomet"), 
                                          "Plymouth", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Sandwich", "Forestdale"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Sandwich", "Forestdale"), 
                                          "Sandwich", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("South Wellfleet"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("South Wellfleet"), 
                                          "Wellfleet", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Amherst"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Amherst"), 
                                          "Amherst", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Uxbridge"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Uxbridge"), 
                                          "Uxbridge", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Housatonic"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Housatonic"), 
                                          "Great Barrington", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Vineyard Haven"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Vineyard Haven"), 
                                          "Tisbury", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Greenbush", "Humarock", "North Scituate"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Greenbush", "Humarock", "North Scituate"), 
                                          "Scituate", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Byfield"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Byfield"), 
                                          "Newbury", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Walpole", "South Walpole"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Walpole", "South Walpole"), 
                                          "Walpole", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Grafton", "South Grafton"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Grafton", "South Grafton"), 
                                          "Grafton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Shattuckville"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Shattuckville"), 
                                          "Colrain", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Woronoco"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Woronoco"), 
                                          "Russell", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Milton Village"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Milton Village"), 
                                          "Milton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Ashley Falls"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Ashley Falls"), 
                                          "Sheffield", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Attleboro Falls"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Attleboro Falls"), 
                                          "North Attleborough", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Manchaug", "Wilkinsonville"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Manchaug", "Wilkinsonville"), 
                                          "Sutton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("West Hatfield", "North Hatfield"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("West Hatfield", "North Hatfield"), 
                                          "Hatfield", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Douglas"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Douglas"), 
                                          "Douglas", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Orleans"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Orleans"), 
                                          "Orleans", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("South Attleboro"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("South Attleboro"), 
                                          "Attleboro", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Baldwinville", "East Templeton"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Baldwinville", "East Templeton"), 
                                          "Templeton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Charlton Depot", "Charlton City"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Charlton Depot", "Charlton City"), 
                                          "Charlton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Assonet", "East Freetown"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Assonet", "East Freetown"), 
                                          "Freetown", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("West Millbury"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("West Millbury"), 
                                          "Millbury", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("West Harwich", "Harwich Port", "East Harwich"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("West Harwich", "Harwich Port", "East Harwich"), 
                                          "Harwich", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("South Dennis", "West Dennis", "East Dennis", "Dennis Port"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("South Dennis", "West Dennis", "East Dennis", "Dennis Port"), 
                                          "Dennis", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Lake Pleasant", "Millers Falls", "Turners Falls"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Lake Pleasant", "Millers Falls", "Turners Falls"), 
                                          "Montague", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Bass River", "West Yarmouth", "Yarmouth Port", "South Yarmouth"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Bass River", "West Yarmouth", "Yarmouth Port", "South Yarmouth"), 
                                          "Yarmouth", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Marshfield Hills", "North Marshfield", 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Marshfield Hills", "North Marshfield", 
                                                                                "Ocean Bluff", "Brant Rock", "Green Harbor"), 
                                          "Marshfield", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Accord"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Accord"), 
                                          "Norwell", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Brookline Vlg"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Brookline Vlg"), 
                                          "Brookline", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Cuttyhunk"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Cuttyhunk"), 
                                          "Gosnold", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Haydenville"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Haydenville"), 
                                          "Williamsburg", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("West Medford"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("West Medford"), 
                                          "Medford", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("West Whately"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("West Whately"), 
                                          "Whately", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Otis"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Otis"), 
                                          "Otis", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Wellesley Hills", "Babson Park"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Wellesley Hills", "Babson Park"), 
                                          "Wellesley", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Feeding Hills"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Feeding Hills"), 
                                          "Agawam", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Gilbertville", "South Harwich"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Gilbertville", "South Harwich"), 
                                          "Hardwick", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Buzzards Bay", "Cataumet", "Monument Beach", "Pocasset", "Sagamore", "Sagamore Beach"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Buzzards Bay", "Cataumet", "Monument Beach", "Pocasset", "Sagamore", "Sagamore Beach"), 
                                          "Bourne", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Westport Point"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Westport Point"), 
                                          "Westport", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Eastham"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Eastham"), 
                                          "Eastham", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Wareham", "West Wareham", "Onset"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Wareham", "West Wareham", "Onset"), 
                                          "Wareham", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Berkshire"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Berkshire"), 
                                          "Lanesborough", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Bondsville", "Thorndike", "Three Rivers"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Bondsville", "Thorndike", "Three Rivers"), 
                                          "Palmer", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Bradford"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Bradford"), 
                                          "Haverhill", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Bryantville"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Bryantville"), 
                                          "Pembroke", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Chartley"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Chartley"), 
                                          "Norton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Cherry Valley", "Rochdale"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Cherry Valley", "Rochdale"), 
                                          "Leicester", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Drury"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Drury"), 
                                          "Florida", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("East Taunton"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("East Taunton"), 
                                          "Taunton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Elmwood"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Elmwood"), 
                                          "East Bridgewater", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Fiskdale"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Fiskdale"), 
                                          "Sturbridge", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Florence", "Leeds"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Florence", "Leeds"), 
                                          "Northampton", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Hathorne"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Hathorne"), 
                                          "Danvers", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Indian Orchard"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Indian Orchard"), 
                                          "Springfield", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Jefferson"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Jefferson"), 
                                          "Holden", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Lenox Dale"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Lenox Dale"), 
                                          "Lenox", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Glendale"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Glendale"), 
                                          "Stockbridge", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Menemsha"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Menemsha"), 
                                          "Chilmark", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Mill River"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Mill River"), 
                                          "New Marlborough", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Monponsett"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Monponsett"), 
                                          "Hanson", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Mt Hermon"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Mt Hermon"), 
                                          "Gill", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("Needham Heights"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("Needham Heights"), 
                                          "Needham", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Billerica"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Billerica"), 
                                          "Billerica", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Carver" ), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Carver" ), 
                                          "Carver", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
-infousa.mass.temp$PRIMARY_CITY <- ifelse(infousa.mass.temp$PRIMARY_CITY %in% c("North Chatham"), 
+infousa.mass.temp$STCITY <- ifelse(infousa.mass.temp$STCITY %in% c("North Chatham"), 
                                          "Chatham", 
-                                         infousa.mass.temp$PRIMARY_CITY)
+                                         infousa.mass.temp$STCITY)
 
 
 # "Ann Arbor"
@@ -466,7 +472,7 @@ pnt.estab.shape <- over(estab.points, ma_nh)
 infousa.mass.nh = cbind(infousa.mass.temp, nhood = pnt.estab.shape$nhood_name)
 
 # add other geographical information from mass.town.types dataset
-infousa.mass.nh.final <- left_join(infousa.mass.nh, mass.town.types, by = c("PRIMARY_CITY" = "municipal"))
+infousa.mass.nh.final <- left_join(infousa.mass.nh, mass.town.types, by = c("STCITY" = "municipal"))
 
 ######### CENSUS TRACTS #############
 tract_2010 = "K:/DataServices/Datasets/U.S. Census and Demographics/Spatial/Census2010/2010_CensusTracts.shp"
@@ -482,29 +488,29 @@ infousa.mass = cbind(infousa.mass.nh.final, ct10_geocode = pnt.estab.shape.ct$GE
 infousa.mass$ct10_geocode = as.character(infousa.mass$ct10_geocode)
 
 # add 11-digit Census 2010 census tract variable 
-infousa.mass$ct10_concat = ifelse(infousa.mass$COUNTY_CODE < 10 & infousa.mass$CENSUS_TRACT < 1000, 
-                                  as.numeric(paste0(infousa.mass$PRIMARY_STATE_CODE, '00', infousa.mass$COUNTY_CODE, '000',
-                                                    infousa.mass$CENSUS_TRACT)),
-                                  ifelse(infousa.mass$COUNTY_CODE < 10 & infousa.mass$CENSUS_TRACT < 10000, 
-                                         as.numeric(paste0(infousa.mass$PRIMARY_STATE_CODE, '00', infousa.mass$COUNTY_CODE, '00',
-                                                           infousa.mass$CENSUS_TRACT)),
-                                         ifelse(infousa.mass$COUNTY_CODE < 10 & infousa.mass$CENSUS_TRACT < 100000, 
-                                                as.numeric(paste0(infousa.mass$PRIMARY_STATE_CODE, '00', infousa.mass$COUNTY_CODE, '0',
-                                                                  infousa.mass$CENSUS_TRACT)),
-                                                ifelse(infousa.mass$COUNTY_CODE < 10 & infousa.mass$CENSUS_TRACT > 100000, 
-                                                       as.numeric(paste0(infousa.mass$PRIMARY_STATE_CODE, '00', infousa.mass$COUNTY_CODE,
-                                                                         infousa.mass$CENSUS_TRACT)),
-                                                       ifelse(infousa.mass$COUNTY_CODE > 10 & infousa.mass$CENSUS_TRACT < 1000, 
-                                                              as.numeric(paste0(infousa.mass$PRIMARY_STATE_CODE, '0', infousa.mass$COUNTY_CODE, '000',
-                                                                                infousa.mass$CENSUS_TRACT)),
-                                                              ifelse(infousa.mass$COUNTY_CODE > 10 & infousa.mass$CENSUS_TRACT < 10000, 
-                                                                     as.numeric(paste0(infousa.mass$PRIMARY_STATE_CODE, '0', infousa.mass$COUNTY_CODE, '00',
-                                                                                       infousa.mass$CENSUS_TRACT)),
-                                                                     ifelse(infousa.mass$COUNTY_CODE > 10 & infousa.mass$CENSUS_TRACT < 100000, 
-                                                                            as.numeric(paste0(infousa.mass$PRIMARY_STATE_CODE, '0', infousa.mass$COUNTY_CODE, '0',
-                                                                                              infousa.mass$CENSUS_TRACT)),
-                                                                            as.numeric(paste0(infousa.mass$PRIMARY_STATE_CODE, '0', infousa.mass$COUNTY_CODE,
-                                                                                              infousa.mass$CENSUS_TRACT)))))))))
+infousa.mass$ct10_concat = ifelse(infousa.mass$CNTYCD < 10 & infousa.mass$CENSUS < 1000, 
+                                  as.numeric(paste0(infousa.mass$STCODE, '00', infousa.mass$CNTYCD, '000',
+                                                    infousa.mass$CENSUS)),
+                                  ifelse(infousa.mass$CNTYCD < 10 & infousa.mass$CENSUS < 10000, 
+                                         as.numeric(paste0(infousa.mass$STCODE, '00', infousa.mass$CNTYCD, '00',
+                                                           infousa.mass$CENSUS)),
+                                         ifelse(infousa.mass$CNTYCD < 10 & infousa.mass$CENSUS < 100000, 
+                                                as.numeric(paste0(infousa.mass$STCODE, '00', infousa.mass$CNTYCD, '0',
+                                                                  infousa.mass$CENSUS)),
+                                                ifelse(infousa.mass$CNTYCD < 10 & infousa.mass$CENSUS > 100000, 
+                                                       as.numeric(paste0(infousa.mass$STCODE, '00', infousa.mass$CNTYCD,
+                                                                         infousa.mass$CENSUS)),
+                                                       ifelse(infousa.mass$CNTYCD > 10 & infousa.mass$CENSUS < 1000, 
+                                                              as.numeric(paste0(infousa.mass$STCODE, '0', infousa.mass$CNTYCD, '000',
+                                                                                infousa.mass$CENSUS)),
+                                                              ifelse(infousa.mass$CNTYCD > 10 & infousa.mass$CENSUS < 10000, 
+                                                                     as.numeric(paste0(infousa.mass$STCODE, '0', infousa.mass$CNTYCD, '00',
+                                                                                       infousa.mass$CENSUS)),
+                                                                     ifelse(infousa.mass$CNTYCD > 10 & infousa.mass$CENSUS < 100000, 
+                                                                            as.numeric(paste0(infousa.mass$STCODE, '0', infousa.mass$CNTYCD, '0',
+                                                                                              infousa.mass$CENSUS)),
+                                                                            as.numeric(paste0(infousa.mass$STCODE, '0', infousa.mass$CNTYCD,
+                                                                                              infousa.mass$CENSUS)))))))))
 
 infousa.mass$ct10_concat = as.character(infousa.mass$ct10_concat)
 
@@ -535,7 +541,7 @@ infousa.mass = cbind(infousa.mass, bg10_geocode = pnt.estab.shape.bg$GEOID10)
 infousa.mass$bg10_geocode = as.character(infousa.mass$bg10_geocode)
 
 # add 12-digit Census 2010 block group variable
-infousa.mass$bg10_concat = as.numeric(paste0(infousa.mass$ct10_id, infousa.mass$CENSUS_BLOCK_GROUP))
+infousa.mass$bg10_concat = as.numeric(paste0(infousa.mass$ct10_id, infousa.mass$BLKGRP))
 
 infousa.mass$bg_match = ifelse(infousa.mass$bg10_geocode == infousa.mass$bg10_concat, 1, 0)
 
@@ -558,6 +564,6 @@ length(unique(infousa.mapc$bg10_id)) # 2671 tracts
 
 # save cleaned/filtered datasets for the rest of your analysis
 setwd(modified.data.path)
-write.csv(infousa.mass, "20200430_infousa_mass_processed.csv", row.names = FALSE)
-write.csv(infousa.mapc, "20200430_infousa_mapc_towns_processed.csv", row.names = FALSE)
+write.csv(infousa.mass, "2022_dataaxle_mass_processed.csv", row.names = FALSE)
+write.csv(infousa.mapc, "2022_dataaxle_mapc_towns_processed.csv", row.names = FALSE)
 
