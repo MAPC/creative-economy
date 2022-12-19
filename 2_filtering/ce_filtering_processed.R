@@ -31,8 +31,8 @@ publishing <- c('511110', '511120', '511130', '511191', '511199')
 visual.music.perf.arts <- c('541921', '541922', '611610', '711110', '711120', '711130', '711190', '711510')
 wholesale.art.store <- c('423410', '423940', '424110', '424920')
 
-#create a NAICSSIX code
-infousa.mass$NAICSSIX <- 
+#create a NAICSSIX code by extracting first 6 digits from the 8-digit NAICS code
+infousa.mass$NAICSSIX <- as.numeric(substr(infousa.mass$NAICS, 1, 6))
 
 infousa.mass$CREATIVE_CAT <- as.factor(ifelse(infousa.mass$NAICSSIX %in% arch.and.design, "Architecture and Design",
                                               #ifelse (infousa.mass$NAICSSIX %in% art.electronic.retail , "Art and electronics-related Retail",
