@@ -14,7 +14,7 @@ library(foreign)
 library(tidyverse)
 options(scipen = 999)
 
-raw.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Raw/2022"
+raw.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Raw"
 #update modified path with year
 modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified/2022"
 gis.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/GIS"
@@ -476,20 +476,26 @@ dataaxle.mass.nh = cbind(dataaxle.mass.temp, nhood = pnt.estab.shape$nhood_name)
 dataaxle.mass.nh.final <- left_join(dataaxle.mass.nh, mass.town.types, by = c("STCITY" = "municipal"))
 
 ######### CENSUS TRACTS #############
-tract_2010 = "K:/DataServices/Datasets/U.S. Census and Demographics/Spatial/Census2010/2010_CensusTracts.shp"
-t2010_shp = readOGR(tract_2010) # 2010 census tracts
+#tract_2010 = "K:/DataServices/Datasets/U.S. Census and Demographics/Spatial/Census2010/2010_CensusTracts.shp"
+#t2010_shp = readOGR(tract_2010) # 2010 census tracts
 # plot(t2010_shp)
-proj4string(t2010_shp) <- new_CRS
+#proj4string(t2010_shp) <- new_CRS
+
+######### CENSUS TRACTS #############
+tract_2020 = "K:/DataServices/Datasets/U.S. Census and Demographics/Census 2020/Data/Processed/Spatial/ct20_2010xw_shp/ct20_2010xw.shp"
+t2020_shp = readOGR(tract_2020) # 2020 census tracts
+# plot(t2020_shp)
+proj4string(t2020_shp) <- new_CRS
 
 # create dataset that tells us which points fall within which neighborhoods
-pnt.estab.shape.ct <- over(estab.points, t2010_shp)
+pnt.estab.shape.ct <- over(estab.points, t2020_shp)
 
 # link neighborhood info to establishment info in full dataaxle dataset
-dataaxle.mass = cbind(dataaxle.mass.nh.final, ct10_geocode = pnt.estab.shape.ct$GEOID10)
-dataaxle.mass$ct10_geocode = as.character(dataaxle.mass$ct10_geocode)
+dataaxle.mass = cbind(dataaxle.mass.nh.final, ct20_geocode = pnt.estab.shape.ct$ct20_id)
+dataaxle.mass$ct20_geocode = as.character(dataaxle.mass$ct20_geocode)
 
 # add 11-digit Census 2010 census tract variable 
-dataaxle.mass$ct10_concat = ifelse(dataaxle.mass$CNTYCD < 10 & dataaxle.mass$CENSUS < 1000, 
+dataaxle.mass$ct20_concat = ifelse(dataaxle.mass$CNTYCD < 10 & dataaxle.mass$CENSUS < 1000, 
                                   as.numeric(paste0(dataaxle.mass$STCODE, '00', dataaxle.mass$CNTYCD, '000',
                                                     dataaxle.mass$CENSUS)),
                                   ifelse(dataaxle.mass$CNTYCD < 10 & dataaxle.mass$CENSUS < 10000, 
@@ -513,58 +519,59 @@ dataaxle.mass$ct10_concat = ifelse(dataaxle.mass$CNTYCD < 10 & dataaxle.mass$CEN
                                                                             as.numeric(paste0(dataaxle.mass$STCODE, '0', dataaxle.mass$CNTYCD,
                                                                                               dataaxle.mass$CENSUS)))))))))
 
-dataaxle.mass$ct10_concat = as.character(dataaxle.mass$ct10_concat)
+dataaxle.mass$ct20_concat = as.character(dataaxle.mass$ct20_concat)
 
-dataaxle.mass$ct_match = ifelse(dataaxle.mass$ct10_geocode == dataaxle.mass$ct10_concat, 1, 0)
+dataaxle.mass$ct_match = ifelse(dataaxle.mass$ct20_geocode == dataaxle.mass$ct20_concat, 1, 0)
 
 # which census tracts were erroneously created in the concatenation step above but don't actually exist in the census tract shapefile
-bad_ct_list = unique(dataaxle.mass$ct10_concat[!(dataaxle.mass$ct10_concat %in% dataaxle.mass$ct10_geocode)])
-dataaxle.mass$bad_ct_concat = ifelse(dataaxle.mass$ct10_concat %in% bad_ct_list, 1, 0)
+bad_ct_list = unique(dataaxle.mass$ct20_concat[!(dataaxle.mass$ct20_concat %in% dataaxle.mass$ct20_geocode)])
+dataaxle.mass$bad_ct_concat = ifelse(dataaxle.mass$ct20_concat %in% bad_ct_list, 1, 0)
 
-dataaxle.mass$ct10_id = ifelse(dataaxle.mass$ct10_concat %in% bad_ct_list, dataaxle.mass$ct10_geocode, dataaxle.mass$ct10_concat)
+dataaxle.mass$ct20_id = ifelse(dataaxle.mass$ct20_concat %in% bad_ct_list, dataaxle.mass$ct20_geocode, dataaxle.mass$ct20_concat)
 
 
 
 ################### FIX BLOCK GROUPS HERE ##########################
 # step 1: upload block group shapefile 
-blockgrp_2010 = "K:/DataServices/Datasets/U.S. Census and Demographics/Spatial/Census2010/2010_Census_BlockGroups.shp" ## REPLACE WITH BLOCK GROUP SHAPEFILE
+blockgrp_2020 = "K:/DataServices/Datasets/U.S. Census and Demographics/Census 2020/Data/Processed/Spatial/bg20_2010xw_shp/bg20_2010xw.shp" ## REPLACE WITH BLOCK GROUP SHAPEFILE
 ################### FIX BLOCK GROUPS HERE ##########################
 
-bg2010_shp = readOGR(blockgrp_2010) # DITTO
-# plot(bg2010_shp)
-proj4string(bg2010_shp) <- new_CRS # REPLACE t2010_shp with block group shapefile
+bg2020_shp = readOGR(blockgrp_2020) # DITTO
+# plot(bg2020_shp)
+proj4string(bg2020_shp) <- new_CRS # REPLACE t2020_shp with block group shapefile
 
 # create dataset that tells us which points fall within which block groups
-pnt.estab.shape.bg <- over(estab.points, bg2010_shp) # REPLACE t2010_shp with block group shapefile 
+pnt.estab.shape.bg <- over(estab.points, bg2020_shp) # REPLACE t2020_shp with block group shapefile 
 
 # link block group info to establishment info in full dataaxle dataset
-dataaxle.mass = cbind(dataaxle.mass, bg10_geocode = pnt.estab.shape.bg$GEOID10)
-dataaxle.mass$bg10_geocode = as.character(dataaxle.mass$bg10_geocode)
+dataaxle.mass = cbind(dataaxle.mass, bg20_geocode = pnt.estab.shape.bg$bg20_id)
+dataaxle.mass$bg20_geocode = as.character(dataaxle.mass$bg20_geocode)
 
 # add 12-digit Census 2010 block group variable
-dataaxle.mass$bg10_concat = as.numeric(paste0(dataaxle.mass$ct10_id, dataaxle.mass$BLKGRP))
+#2022 update - removing this because concatenated block groups does not apply for this dataset (DataAxle used 2010 geos)
+#dataaxle.mass$bg20_concat = as.numeric(paste0(dataaxle.mass$ct20_id, dataaxle.mass$BLKGRP))
 
-dataaxle.mass$bg_match = ifelse(dataaxle.mass$bg10_geocode == dataaxle.mass$bg10_concat, 1, 0)
+#dataaxle.mass$bg_match = ifelse(dataaxle.mass$bg20_geocode == dataaxle.mass$bg20_concat, 1, 0)
 
 # which block group were erroneously created in the concatenation step above but don't actually exist in the block group shapefile
-bad_bg_list = unique(dataaxle.mass$bg10_concat[!(dataaxle.mass$bg10_concat %in% dataaxle.mass$bg10_geocode)])
-dataaxle.mass$bad_bg_concat = ifelse(dataaxle.mass$bg10_concat %in% bad_bg_list, 1, 0)
+#bad_bg_list = unique(dataaxle.mass$bg20_concat[!(dataaxle.mass$bg20_concat %in% dataaxle.mass$bg20_geocode)])
+#dataaxle.mass$bad_bg_concat = ifelse(dataaxle.mass$bg20_concat %in% bad_bg_list, 1, 0)
 
-dataaxle.mass$bg10_id = ifelse(dataaxle.mass$bg10_concat %in% bad_bg_list, dataaxle.mass$bg10_geocode, dataaxle.mass$bg10_concat)
-
+#dataaxle.mass$bg20_id = ifelse(dataaxle.mass$bg20_concat %in% bad_bg_list, dataaxle.mass$bg20_geocode, dataaxle.mass$bg20_concat)
+dataaxle.mass$bg20_id = dataaxle.mass$bg20_geocode
 
 # Filter dataaxle listings on MAPC municipalities
 dataaxle.mapc <- dataaxle.mass %>%
   filter(mapc == 1)
 
-length(unique(dataaxle.mapc$ct10_concat)) # 909 tracts
-length(unique(dataaxle.mapc$ct10_geocode)) # 884 tracts
-length(unique(dataaxle.mapc$ct10_id)) # 882 tracts
+length(unique(dataaxle.mapc$ct20_concat)) # 737 tracts
+length(unique(dataaxle.mapc$ct20_geocode)) # 821  tracts
+length(unique(dataaxle.mapc$ct20_id)) # 818 tracts
 
-length(unique(dataaxle.mapc$bg10_id)) # 2671 tracts
+length(unique(dataaxle.mapc$bg20_id)) # 2412 block groups
 
 # save cleaned/filtered datasets for the rest of your analysis
 setwd(modified.data.path)
-write.csv(dataaxle.mass, "2022_dataaxle_mass_processed.csv", row.names = FALSE)
-write.csv(dataaxle.mapc, "2022_dataaxle_mapc_towns_processed.csv", row.names = FALSE)
+write.csv(dataaxle.mass, "2022_dataaxle_mass_processed_w2020census.csv", row.names = FALSE)
+write.csv(dataaxle.mapc, "2022_dataaxle_mapc_towns_processed_w2020census.csv", row.names = FALSE)
 
