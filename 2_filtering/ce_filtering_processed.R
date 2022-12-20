@@ -1,16 +1,19 @@
-# Script: InfoUSA data filtering and creative economy category assignment
+# Script: dataaxle data filtering and creative economy category assignment
 # Author: Seleeke Flingai
 # Date Last Modified: December 19, 2022 by RBowers
 
 install.packages('pacman')
 pacman::p_load(tidyr, dplyr, reshape2)
+library(magrittr) # needs to be run every time you start R and want to use %>%
+library(dplyr)    # alternatively, this also loads %>%
 
-modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified"
+#update modified data path to current year
+modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified/2022"
 naics.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/NAICS/Converted NAICS CE code tables/Conversions to 2012"
 
-# load InfoUSA data for Massachusetts and its municipalities (2016)
+# load dataaxle data for Massachusetts and its municipalities (2016)
 setwd(modified.data.path)
-infousa.mass <- read.csv("2022_dataaxle_mass_processed.csv", stringsAsFactors = FALSE)
+dataaxle.mass <- read.csv("2022_dataaxle_mapc_towns_processed_w2020census.csv", stringsAsFactors = FALSE)
 
 ####### DATA WRANGLING: ASSIGN NEFA CREATIVE CATEGORIES TO EACH ESTABLISHMENT #######
 # From Appendix D (NEFA Core Industries by Creative Category) of 2017 NEFA Report "The Jobs in New England's Creative Economy and Why They Matter"
@@ -32,27 +35,27 @@ visual.music.perf.arts <- c('541921', '541922', '611610', '711110', '711120', '7
 wholesale.art.store <- c('423410', '423940', '424110', '424920')
 
 #create a NAICSSIX code by extracting first 6 digits from the 8-digit NAICS code
-infousa.mass$NAICSSIX <- as.numeric(substr(infousa.mass$NAICS, 1, 6))
+dataaxle.mass$NAICSSIX <- as.numeric(substr(dataaxle.mass$NAICS, 1, 6))
 
-infousa.mass$CREATIVE_CAT <- as.factor(ifelse(infousa.mass$NAICSSIX %in% arch.and.design, "Architecture and Design",
-                                              #ifelse (infousa.mass$NAICSSIX %in% art.electronic.retail , "Art and electronics-related Retail",
-                                              ifelse (infousa.mass$NAICSSIX %in% art.retail , "Art-related Retail",
-                                                      ifelse(infousa.mass$NAICSSIX %in% art.arch.manu, "Arts and architectural manufacturing", 
-                                                             ifelse(infousa.mass$NAICSSIX %in% culture.pres, "Culture and Preservation", 
-                                                                    ifelse(infousa.mass$NAICSSIX %in% mach.comm.manu, "Machinery and communications manufacturing",
-                                                                           ifelse(infousa.mass$NAICSSIX %in% marketing, "Marketing",
-                                                                                  ifelse(infousa.mass$NAICSSIX %in% mat.manu, "Materials manufacturing",
-                                                                                         ifelse(infousa.mass$NAICSSIX %in% media, "Media",
-                                                                                                ifelse(infousa.mass$NAICSSIX %in% motion.pic.teleprod, "Motion picture and teleproduction",
-                                                                                                       ifelse(infousa.mass$NAICSSIX %in% music.rec, "Music Recording",
-                                                                                                              ifelse(infousa.mass$NAICSSIX %in% printing, "Printing",
-                                                                                                                     ifelse(infousa.mass$NAICSSIX %in% publishing, "Publishing",
-                                                                                                                            ifelse(infousa.mass$NAICSSIX %in% visual.music.perf.arts, "Visual Arts, Music and Other Performing Arts",
-                                                                                                                                   ifelse(infousa.mass$NAICSSIX %in% wholesale.art.store, "Wholesale art stores", NA)))))))))))))))
+dataaxle.mass$CREATIVE_CAT <- as.factor(ifelse(dataaxle.mass$NAICSSIX %in% arch.and.design, "Architecture and Design",
+                                              #ifelse (dataaxle.mass$NAICSSIX %in% art.electronic.retail , "Art and electronics-related Retail",
+                                              ifelse (dataaxle.mass$NAICSSIX %in% art.retail , "Art-related Retail",
+                                                      ifelse(dataaxle.mass$NAICSSIX %in% art.arch.manu, "Arts and architectural manufacturing", 
+                                                             ifelse(dataaxle.mass$NAICSSIX %in% culture.pres, "Culture and Preservation", 
+                                                                    ifelse(dataaxle.mass$NAICSSIX %in% mach.comm.manu, "Machinery and communications manufacturing",
+                                                                           ifelse(dataaxle.mass$NAICSSIX %in% marketing, "Marketing",
+                                                                                  ifelse(dataaxle.mass$NAICSSIX %in% mat.manu, "Materials manufacturing",
+                                                                                         ifelse(dataaxle.mass$NAICSSIX %in% media, "Media",
+                                                                                                ifelse(dataaxle.mass$NAICSSIX %in% motion.pic.teleprod, "Motion picture and teleproduction",
+                                                                                                       ifelse(dataaxle.mass$NAICSSIX %in% music.rec, "Music Recording",
+                                                                                                              ifelse(dataaxle.mass$NAICSSIX %in% printing, "Printing",
+                                                                                                                     ifelse(dataaxle.mass$NAICSSIX %in% publishing, "Publishing",
+                                                                                                                            ifelse(dataaxle.mass$NAICSSIX %in% visual.music.perf.arts, "Visual Arts, Music and Other Performing Arts",
+                                                                                                                                   ifelse(dataaxle.mass$NAICSSIX %in% wholesale.art.store, "Wholesale art stores", NA)))))))))))))))
 
 
 
-####### DATA FILTERING: CREATIVE ECONOMY FILTERING OF INFOUSA DATA ########
+####### DATA FILTERING: CREATIVE ECONOMY FILTERING OF dataaxle DATA ########
 # load NAICS creative economy lists from NEFA
 setwd(naics.path)
 nefa.all.naics <- read.csv("naics_12_nefa.csv", stringsAsFactors = FALSE)
@@ -62,37 +65,37 @@ nefa.core.naics <- read.csv("naics_12_nefa_core.csv", stringsAsFactors = FALSE)
 nefa.all.12 <- nefa.all.naics$naics
 nefa.core.12 <- nefa.core.naics$naics
 
-# Flag each establishment in the infousa database as creative (core or all (core + peripheral)) or not
+# Flag each establishment in the dataaxle database as creative (core or all (core + peripheral)) or not
 # by their 6-digit NAICS code
-infousa.mass$CE_ALL_FLAG <- ifelse(infousa.mass$NAICSSIX %in% nefa.all.12, 1, 0)
-infousa.mass$CE_CORE_FLAG <- ifelse(infousa.mass$NAICSSIX %in% nefa.core.12, 1, 0)
+dataaxle.mass$CE_ALL_FLAG <- ifelse(dataaxle.mass$NAICSSIX %in% nefa.all.12, 1, 0)
+dataaxle.mass$CE_CORE_FLAG <- ifelse(dataaxle.mass$NAICSSIX %in% nefa.core.12, 1, 0)
 
 
-####### DATA FILTERING: FILTER INFOUSA DATA (ALL AND CREATIVE ECONOMY ONLY) ON MAPC MUNICIPALITIES ###########
-infousa.nefa.all.mapc <- infousa.mass %>%
+####### DATA FILTERING: FILTER dataaxle DATA (ALL AND CREATIVE ECONOMY ONLY) ON MAPC MUNICIPALITIES ###########
+dataaxle.nefa.all.mapc <- dataaxle.mass %>%
   filter(mapc == 1,
          CE_ALL_FLAG == 1)
 
-infousa.nefa.all.mass <- infousa.mass %>%
+dataaxle.nefa.all.mass <- dataaxle.mass %>%
   filter(CE_ALL_FLAG == 1)
 
-infousa.nefa.core.mapc <- infousa.mass %>%
+dataaxle.nefa.core.mapc <- dataaxle.mass %>%
   filter(mapc == 1,
          CE_CORE_FLAG == 1)
 
-infousa.nefa.core.mass <- infousa.mass %>%
+dataaxle.nefa.core.mass <- dataaxle.mass %>%
   filter(CE_CORE_FLAG == 1)
 
 # Remove electronic stores from core establishments dataset
-infousa.nefa.core.mapc <- infousa.nefa.core.mapc %>%
+dataaxle.nefa.core.mapc <- dataaxle.nefa.core.mapc %>%
   filter(complete.cases(CREATIVE_CAT)) 
 
-infousa.nefa.core.mass <- infousa.nefa.core.mass %>%
+dataaxle.nefa.core.mass <- dataaxle.nefa.core.mass %>%
   filter(complete.cases(CREATIVE_CAT))
 
 setwd(modified.data.path)
 
-write.csv(infousa.nefa.all.mapc, "2022_DataAxle_nefa_all_mapc_processed.csv", row.names = FALSE)
-write.csv(infousa.nefa.all.mass, "2022_DataAxle_nefa_all_mass_processed.csv", row.names = FALSE)
-write.csv(infousa.nefa.core.mapc, "2022_DataAxle_nefa_core_mapc_processed.csv", row.names = FALSE)
-write.csv(infousa.nefa.core.mass, "2022_DataAxle_nefa_core_mass_processed.csv", row.names = FALSE)
+write.csv(dataaxle.nefa.all.mapc, "2022_DataAxle_nefa_all_mapc_processed.csv", row.names = FALSE)
+write.csv(dataaxle.nefa.all.mass, "2022_DataAxle_nefa_all_mass_processed.csv", row.names = FALSE)
+write.csv(dataaxle.nefa.core.mapc, "2022_DataAxle_nefa_core_mapc_processed.csv", row.names = FALSE)
+write.csv(dataaxle.nefa.core.mass, "2022_DataAxle_nefa_core_mass_processed.csv", row.names = FALSE)
