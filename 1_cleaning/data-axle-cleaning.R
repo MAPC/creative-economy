@@ -527,8 +527,9 @@ dataaxle.mass$ct_match = ifelse(dataaxle.mass$ct20_geocode == dataaxle.mass$ct20
 bad_ct_list = unique(dataaxle.mass$ct20_concat[!(dataaxle.mass$ct20_concat %in% dataaxle.mass$ct20_geocode)])
 dataaxle.mass$bad_ct_concat = ifelse(dataaxle.mass$ct20_concat %in% bad_ct_list, 1, 0)
 
-dataaxle.mass$ct20_id = ifelse(dataaxle.mass$ct20_concat %in% bad_ct_list, dataaxle.mass$ct20_geocode, dataaxle.mass$ct20_concat)
-
+#dataaxle.mass$ct20_id = ifelse(dataaxle.mass$ct20_concat %in% bad_ct_list, dataaxle.mass$ct20_geocode, dataaxle.mass$ct20_concat)
+#2022 update: eliminating this step and just using the geocoded ID (there were some failed matches that didn't make sense)
+dataaxle.mass$ct20_id = dataaxle.mass$ct20_geocode
 
 
 ################### FIX BLOCK GROUPS HERE ##########################
@@ -558,7 +559,7 @@ dataaxle.mass$bg20_geocode = as.character(dataaxle.mass$bg20_geocode)
 #dataaxle.mass$bad_bg_concat = ifelse(dataaxle.mass$bg20_concat %in% bad_bg_list, 1, 0)
 
 #dataaxle.mass$bg20_id = ifelse(dataaxle.mass$bg20_concat %in% bad_bg_list, dataaxle.mass$bg20_geocode, dataaxle.mass$bg20_concat)
-dataaxle.mass$bg20_id = dataaxle.mass$bg20_geocode
+dataaxle.mass$bg20_id = dataaxle.mass$bg20
 
 # Filter dataaxle listings on MAPC municipalities
 dataaxle.mapc <- dataaxle.mass %>%
