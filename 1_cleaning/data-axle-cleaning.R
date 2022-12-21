@@ -559,7 +559,7 @@ dataaxle.mass$bg20_geocode = as.character(dataaxle.mass$bg20_geocode)
 #dataaxle.mass$bad_bg_concat = ifelse(dataaxle.mass$bg20_concat %in% bad_bg_list, 1, 0)
 
 #dataaxle.mass$bg20_id = ifelse(dataaxle.mass$bg20_concat %in% bad_bg_list, dataaxle.mass$bg20_geocode, dataaxle.mass$bg20_concat)
-dataaxle.mass$bg20_id = dataaxle.mass$bg20
+dataaxle.mass$bg20_id = dataaxle.mass$bg20_geocode
 
 # Filter dataaxle listings on MAPC municipalities
 dataaxle.mapc <- dataaxle.mass %>%
