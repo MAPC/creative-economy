@@ -4,14 +4,13 @@ Written by Seleeke Flingai, updated by Rachel Bowers
 Date: December 27, 2022
 
 ## Introduction
-The R scripts folder is broken down into four subfolders – Cleaning, Filtering, Analysis, and Mapping – that were used to go from raw DataAxle 2021 master file to municipal- and regional-level summaries and maps of creative economy data. 
+The R scripts folder is broken down into four subfolders – **Cleaning, Filtering, Analysis, and Mapping** – that were used to go from raw DataAxle 2021 master file to municipal- and regional-level summaries and maps of creative economy data. 
 While each script folder and its contents will be described below, it is likely that the cleaning and filtering scripts won’t need to be touched for any future analysis unless updated DataAxle data is purchased or an alternative data source is considered. 
-
 
 
 ### 1_Cleaning
 Cleans up DataAxle 2021 dataset and selects the most relevant variables for the rest of the analysis
-- Input: DataAxle 2021 data processed by Susan Brunton for the state of Massachusetts (found in Raw data folder under DataAxle2016.csv)
+- Input: DataAxle 2021 data
 - Output: two .csv files (found in Modified data folder): 
     - `DataAxle_mass_processed.csv` (includes DataAxle data for all of Massachusetts)
     - `DataAxle_mapc_towns_processed.csv` (only includes data from MAPC municipalities)
