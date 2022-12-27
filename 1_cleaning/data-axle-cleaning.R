@@ -573,6 +573,6 @@ length(unique(dataaxle.mapc$bg20_id)) # 2412 block groups
 
 # save cleaned/filtered datasets for the rest of your analysis
 setwd(modified.data.path)
-write.csv(dataaxle.mass, "2022_dataaxle_mass_processed.csv", row.names = FALSE)
-write.csv(dataaxle.mapc, "2022_dataaxle_mapc_towns_processed.csv", row.names = FALSE)
+write.csv(dataaxle.mass, "dataaxle_mass_processed.csv", row.names = FALSE)
+write.csv(dataaxle.mapc, "dataaxle_mapc_towns_processed.csv", row.names = FALSE)
 

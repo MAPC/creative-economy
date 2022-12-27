@@ -95,7 +95,7 @@ dataaxle.nefa.core.mass <- dataaxle.nefa.core.mass %>%
 
 setwd(modified.data.path)
 
-write.csv(dataaxle.nefa.all.mapc, "2022_DataAxle_nefa_all_mapc_processed.csv", row.names = FALSE)
-write.csv(dataaxle.nefa.all.mass, "2022_DataAxle_nefa_all_mass_processed.csv", row.names = FALSE)
-write.csv(dataaxle.nefa.core.mapc, "2022_DataAxle_nefa_core_mapc_processed.csv", row.names = FALSE)
-write.csv(dataaxle.nefa.core.mass, "2022_DataAxle_nefa_core_mass_processed.csv", row.names = FALSE)
+write.csv(dataaxle.nefa.all.mapc, "DataAxle_nefa_all_mapc_processed.csv", row.names = FALSE)
+write.csv(dataaxle.nefa.all.mass, "DataAxle_nefa_all_mass_processed.csv", row.names = FALSE)
+write.csv(dataaxle.nefa.core.mapc, "DataAxle_nefa_core_mapc_processed.csv", row.names = FALSE)
+write.csv(dataaxle.nefa.core.mass, "DataAxle_nefa_core_mass_processed.csv", row.names = FALSE)

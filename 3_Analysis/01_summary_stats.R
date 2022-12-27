@@ -11,12 +11,12 @@ output.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Plann
 
 # load dataaxle and ES-202 data for Massachusetts and its municipalities (2021)
 setwd(modified.data.path)
-dataaxle.nefa.core.mapc <- fread("2022_DataAxle_nefa_core_mapc_processed.csv", stringsAsFactors = FALSE)
-dataaxle.nefa.core.mass <- fread("2022_DataAxle_nefa_core_mass_processed.csv", stringsAsFactors = FALSE)
-dataaxle.nefa.all.mapc <- fread("2022_DataAxle_nefa_all_mapc_processed.csv", stringsAsFactors = FALSE)
-dataaxle.nefa.all.mass <- fread("2022_DataAxle_nefa_all_mass_processed.csv", stringsAsFactors = FALSE)
-dataaxle.mapc.towns <-  fread("2022_dataaxle_mapc_towns_processed.csv", stringsAsFactors = FALSE)
-dataaxle.mass <- fread("2022_dataaxle_mass_processed.csv", stringsAsFactors = FALSE)
+dataaxle.nefa.core.mapc <- fread("DataAxle_nefa_core_mapc_processed.csv", stringsAsFactors = FALSE)
+dataaxle.nefa.core.mass <- fread("DataAxle_nefa_core_mass_processed.csv", stringsAsFactors = FALSE)
+dataaxle.nefa.all.mapc <- fread("DataAxle_nefa_all_mapc_processed.csv", stringsAsFactors = FALSE)
+dataaxle.nefa.all.mass <- fread("DataAxle_nefa_all_mass_processed.csv", stringsAsFactors = FALSE)
+dataaxle.mapc.towns <-  fread("dataaxle_mapc_towns_processed.csv", stringsAsFactors = FALSE)
+dataaxle.mass <- fread("dataaxle_mass_processed.csv", stringsAsFactors = FALSE)
 
 
 ########################################## MUNICIPAL ##########################################
