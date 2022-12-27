@@ -9,38 +9,38 @@ pacman::p_load(tidyr, dplyr, reshape2, scales, data.table, bit64)
 modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified/2022"
 output.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Output/2022"
 
-# load dataaxle and ES-202 data for Massachusetts and its municipalities (2016)
+# load dataaxle and ES-202 data for Massachusetts and its municipalities (2021)
 setwd(modified.data.path)
-dataaxle.nefa.core.mapc <- fread("20200430_dataaxle_nefa_core_mapc_processed.csv", stringsAsFactors = FALSE)
-dataaxle.nefa.core.mass <- fread("20200430_dataaxle_nefa_core_mass_processed.csv", stringsAsFactors = FALSE)
-dataaxle.nefa.all.mapc <- fread("20200430_dataaxle_nefa_all_mapc_processed.csv", stringsAsFactors = FALSE)
-dataaxle.nefa.all.mass <- fread("20200430_dataaxle_nefa_all_mass_processed.csv", stringsAsFactors = FALSE)
-dataaxle.mapc.towns <-  fread("20200430_dataaxle_mapc_towns_processed.csv", stringsAsFactors = FALSE)
-dataaxle.mass <- fread("20200430_dataaxle_mass_processed.csv", stringsAsFactors = FALSE)
+dataaxle.nefa.core.mapc <- fread("2022_DataAxle_nefa_core_mapc_processed.csv", stringsAsFactors = FALSE)
+dataaxle.nefa.core.mass <- fread("2022_DataAxle_nefa_core_mass_processed.csv", stringsAsFactors = FALSE)
+dataaxle.nefa.all.mapc <- fread("2022_DataAxle_nefa_all_mapc_processed.csv", stringsAsFactors = FALSE)
+dataaxle.nefa.all.mass <- fread("2022_DataAxle_nefa_all_mass_processed.csv", stringsAsFactors = FALSE)
+dataaxle.mapc.towns <-  fread("2022_dataaxle_mapc_towns_processed.csv", stringsAsFactors = FALSE)
+dataaxle.mass <- fread("2022_dataaxle_mass_processed.csv", stringsAsFactors = FALSE)
 
 
 ########################################## MUNICIPAL ##########################################
 ####### SUMMARY STATISTICS, BY MUNICIPALITY AND NEFA CREATIVE INDUSTRY GROUP 
 #### summary statistics, by municipality, using NEFA Core Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.core.municipality.df <- dataaxle.nefa.core.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
-  group_by(PRIMARY_CITY) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  dplyr::select(OBJECTID, STCITY, LOCEMP, SLSVDT,
+                FEMOWN) %>%
+  group_by(STCITY) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each municipality
 summary.dataaxle.ce.nefa.core.municipality.df <- inner_join (summary.dataaxle.ce.nefa.core.municipality.df, 
-                                                            data.frame(table(dataaxle.mapc.towns$PRIMARY_CITY)), by = c("PRIMARY_CITY" = "Var1")) %>%
-  left_join (unique(dataaxle.nefa.core.mapc[,c("PRIMARY_CITY", "county", "comm_name", "subtype", "subregion")]),
-             by = "PRIMARY_CITY") %>%
+                                                            data.frame(table(dataaxle.mapc.towns$STCITY)), by = c("STCITY" = "Var1")) %>%
+  left_join (unique(dataaxle.nefa.core.mapc[,c("STCITY", "county", "comm_name", "subtype", "subregion")]),
+             by = "STCITY") %>%
   left_join(dataaxle.mapc.towns %>%
-              group_by(PRIMARY_CITY) %>%
-              summarise(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE)), by = "PRIMARY_CITY")
+              group_by(STCITY) %>%
+              summarise(all.employee.count = sum(LOCEMP)), by = "STCITY")
 
 summary.dataaxle.ce.nefa.core.municipality.df <- summary.dataaxle.ce.nefa.core.municipality.df %>%
   mutate("all.estab" = Freq,
@@ -52,7 +52,7 @@ summary.dataaxle.ce.nefa.core.municipality.df <- summary.dataaxle.ce.nefa.core.m
          share.all.employee.mapc = round(all.employee.count / sum(all.employee.count), digits = 3),
          ce.share.employee.core.geography = round(ce.core.employee.count / all.employee.count, digits = 3),
          ce.share.employee.core.mapc = round(ce.core.employee.count / sum(ce.core.employee.count), digits = 3)) %>%
-  dplyr::select("geography" = PRIMARY_CITY, county, "comm.type" = comm_name, subtype, subregion, 
+  dplyr::select("geography" = STCITY, county, "comm.type" = comm_name, subtype, subregion, 
                 all.estab, share.all.mapc, ce.core.estab, ce.share.core.geography, ce.share.core.geography.perc, 
                 ce.share.core.mapc, ce.share.core.mapc.perc, all.employee.count, share.all.employee.mapc,
                 ce.core.employee.count, ce.share.employee.core.geography, 
@@ -61,24 +61,24 @@ summary.dataaxle.ce.nefa.core.municipality.df <- summary.dataaxle.ce.nefa.core.m
 
 #### summary statistics, by municipality, using NEFA All (Core + Peripheral) Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.all.municipality.df <- dataaxle.nefa.all.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
-  group_by(PRIMARY_CITY) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  dplyr::select(OBJECTID, STCITY, LOCEMP, SLSVDT,
+                FEMOWN) %>%
+  group_by(STCITY) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.all.estab = n(),
-            ce.all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.all.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.all.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.all.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.all.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.all.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.all.female.owned = mean(FEMOWN),
+            ce.all.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each municipality
 summary.dataaxle.ce.nefa.all.municipality.df <- inner_join (summary.dataaxle.ce.nefa.all.municipality.df, 
-                                                           data.frame(table(dataaxle.mapc.towns$PRIMARY_CITY)), by = c("PRIMARY_CITY" = "Var1")) %>%
-  left_join (unique(dataaxle.nefa.all.mapc[,c("PRIMARY_CITY", "county", "comm_name", "subtype", "subregion")]),
-             by = "PRIMARY_CITY") %>%
+                                                           data.frame(table(dataaxle.mapc.towns$STCITY)), by = c("STCITY" = "Var1")) %>%
+  left_join (unique(dataaxle.nefa.all.mapc[,c("STCITY", "county", "comm_name", "subtype", "subregion")]),
+             by = "STCITY") %>%
   left_join(dataaxle.mapc.towns %>%
-              group_by(PRIMARY_CITY) %>%
-              summarise(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE)), by = "PRIMARY_CITY")
+              group_by(STCITY) %>%
+              summarise(all.employee.count = sum(LOCEMP)), by = "STCITY")
 
 summary.dataaxle.ce.nefa.all.municipality.df <- summary.dataaxle.ce.nefa.all.municipality.df %>%
   mutate("all.estab" = Freq,
@@ -90,7 +90,7 @@ summary.dataaxle.ce.nefa.all.municipality.df <- summary.dataaxle.ce.nefa.all.mun
          share.all.employee.mapc = round(all.employee.count / sum(all.employee.count), digits = 3),
          ce.share.employee.all.geography = round(ce.all.employee.count / all.employee.count, digits = 3),
          ce.share.employee.all.mapc = round(ce.all.employee.count / sum(ce.all.employee.count), digits = 3)) %>%
-  dplyr::select("geography" = PRIMARY_CITY, county, "comm.type" = comm_name, subtype, subregion, 
+  dplyr::select("geography" = STCITY, county, "comm.type" = comm_name, subtype, subregion, 
                 all.estab, share.all.mapc, ce.all.estab, ce.share.all.geography, ce.share.all.geography.perc,
                 ce.share.all.mapc, ce.share.all.mapc.perc, all.employee.count, share.all.employee.mapc, 
                 ce.all.employee.count, ce.share.employee.all.geography, ce.share.employee.all.mapc, 
@@ -98,16 +98,16 @@ summary.dataaxle.ce.nefa.all.municipality.df <- summary.dataaxle.ce.nefa.all.mun
 
 #### summary statistics, by NEFA Creative Industry Group categorization, MAPC region
 summary.dataaxle.ce.nefa.core.categories.mapc.detailed.df <- dataaxle.nefa.core.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC, CREATIVE_CAT) %>%
+  dplyr::select(OBJECTID, STCITY, LOCEMP, SLSVDT,
+                FEMOWN, CREATIVE_CAT) %>%
   filter(complete.cases(CREATIVE_CAT)) %>%
   group_by(CREATIVE_CAT) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1)) %>%
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1)) %>%
   mutate(cat.core.estab.share = ce.core.estab / sum(ce.core.estab),
          cat.core.estab.share.perc = percent(cat.core.estab.share),
          cat.core.employee.share = ce.core.employee.count / sum(ce.core.employee.count),
@@ -117,16 +117,16 @@ summary.dataaxle.ce.nefa.core.categories.mapc.detailed.df <- dataaxle.nefa.core.
 
 #### summary statistics, by NEFA Creative Industry Group categorization, Massachusetts
 summary.dataaxle.ce.nefa.core.categories.mass.detailed.df <- dataaxle.nefa.core.mass %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC, CREATIVE_CAT) %>%
+  dplyr::select(OBJECTID, STCITY, LOCEMP, SLSVDT,
+                FEMOWN, CREATIVE_CAT) %>%
   filter(complete.cases(CREATIVE_CAT)) %>%
   group_by(CREATIVE_CAT) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1)) %>%
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1)) %>%
   mutate(cat.core.estab.share = ce.core.estab / sum(ce.core.estab),
          cat.core.estab.share.perc = percent(cat.core.estab.share),
          cat.core.employee.share = ce.core.employee.count / sum(ce.core.employee.count),
@@ -156,7 +156,7 @@ summary.dataaxle.ce.nefa.core.categories.mass.df <- summary.dataaxle.ce.nefa.cor
 # number and share of each creative industry
 # dataaxle data
 by.town.dataaxle.mapc <- dataaxle.nefa.core.mapc %>%
-  dplyr::select("geography" = PRIMARY_CITY, CREATIVE_CAT) %>%
+  dplyr::select("geography" = STCITY, CREATIVE_CAT) %>%
   mutate("indicator" = rep(1, nrow(dataaxle.nefa.core.mapc))) %>%
   group_by(geography, CREATIVE_CAT) %>%
   summarise("estab" = sum(indicator)) %>%
@@ -184,25 +184,25 @@ by.town.dataaxle.share[is.na(by.town.dataaxle.share)] <- 0
 ########################################## MASSACHUSETTS ##########################################
 #### summary statistics, by state, using NEFA Core Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.core.mass.df <- dataaxle.nefa.core.mass %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, PRIMARY_STATE, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
-  group_by(PRIMARY_STATE) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  dplyr::select(OBJECTID, STCITY, STATE, LOCEMP, SLSVDT,
+                FEMOWN) %>%
+  group_by(STATE) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in the state
 summary.dataaxle.ce.nefa.core.mass.temp <- left_join (summary.dataaxle.ce.nefa.core.mass.df, 
-                                                     data.frame(table(dataaxle.mass$PRIMARY_STATE[dataaxle.mass$PRIMARY_STATE=="MA"])), 
-                                                     by = c("PRIMARY_STATE" = "Var1")) %>%
-  left_join (unique(dataaxle.nefa.core.mass[,c("PRIMARY_STATE", "county", "comm_name", "subtype", "subregion")]),
-             by = "PRIMARY_STATE") %>%
+                                                     data.frame(table(dataaxle.mass$STATE[dataaxle.mass$STATE=="MA"])), 
+                                                     by = c("STATE" = "Var1")) %>%
+  left_join (unique(dataaxle.nefa.core.mass[,c("STATE", "county", "comm_name", "subtype", "subregion")]),
+             by = "STATE") %>%
   left_join(dataaxle.mass %>%
-              group_by(PRIMARY_STATE) %>%
-              summarise(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE)), by = "PRIMARY_STATE")
+              group_by(STATE) %>%
+              summarise(all.employee.count = sum(LOCEMP)), by = "STATE")
 
 summary.dataaxle.ce.nefa.core.mass.df <- summary.dataaxle.ce.nefa.core.mass.temp %>%
   mutate("all.estab" = Freq,
@@ -212,7 +212,7 @@ summary.dataaxle.ce.nefa.core.mass.df <- summary.dataaxle.ce.nefa.core.mass.temp
          share.all.employee.mapc = NA,
          ce.share.employee.core.geography = round(ce.core.employee.count / all.employee.count, digits = 3),
          ce.share.employee.core.mapc = NA) %>%
-  dplyr::select("geography" = PRIMARY_STATE, all.estab, share.all.mapc, ce.core.estab, ce.share.core.geography, 
+  dplyr::select("geography" = STATE, all.estab, share.all.mapc, ce.core.estab, ce.share.core.geography, 
                 ce.share.core.mapc, all.employee.count, share.all.employee.mapc, ce.core.employee.count, 
                 ce.share.employee.core.geography, ce.share.employee.core.mapc, ce.core.sales.total, 
                 ce.core.sole.prop.count, ce.core.female.owned) %>%
@@ -222,25 +222,25 @@ summary.dataaxle.ce.nefa.core.mass.df <- unique(summary.dataaxle.ce.nefa.core.ma
 
 #### summary statistics, by state, using NEFA All Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.all.mass.df <- dataaxle.nefa.all.mass %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, PRIMARY_STATE, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
-  group_by(PRIMARY_STATE) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  dplyr::select(OBJECTID, STCITY, STATE, LOCEMP, SLSVDT,
+                FEMOWN) %>%
+  group_by(STATE) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.all.estab = n(),
-            ce.all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.all.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.all.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.all.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.all.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.all.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.all.female.owned = mean(FEMOWN),
+            ce.all.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in the state
 summary.dataaxle.ce.nefa.all.mass.temp <- left_join (summary.dataaxle.ce.nefa.all.mass.df, 
-                                                    data.frame(table(dataaxle.mass$PRIMARY_STATE[dataaxle.mass$PRIMARY_STATE=="MA"])), 
-                                                    by = c("PRIMARY_STATE" = "Var1")) %>%
-  left_join (unique(dataaxle.nefa.all.mass[,c("PRIMARY_STATE", "county", "comm_name", "subtype", "subregion")]),
-             by = "PRIMARY_STATE") %>%
+                                                    data.frame(table(dataaxle.mass$STATE[dataaxle.mass$STATE=="MA"])), 
+                                                    by = c("STATE" = "Var1")) %>%
+  left_join (unique(dataaxle.nefa.all.mass[,c("STATE", "county", "comm_name", "subtype", "subregion")]),
+             by = "STATE") %>%
   left_join(dataaxle.mass %>%
-              group_by(PRIMARY_STATE) %>%
-              summarise(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE)), by = "PRIMARY_STATE")
+              group_by(STATE) %>%
+              summarise(all.employee.count = sum(LOCEMP)), by = "STATE")
 
 summary.dataaxle.ce.nefa.all.mass.df <- summary.dataaxle.ce.nefa.all.mass.temp %>%
   mutate("all.estab" = Freq,
@@ -250,7 +250,7 @@ summary.dataaxle.ce.nefa.all.mass.df <- summary.dataaxle.ce.nefa.all.mass.temp %
          share.all.employee.mapc = NA,
          ce.share.employee.all.geography = round(ce.all.employee.count / all.employee.count, digits = 3),
          ce.share.employee.all.mapc = NA) %>%
-  dplyr::select("geography" = PRIMARY_STATE, 
+  dplyr::select("geography" = STATE, 
                 all.estab, share.all.mapc, ce.all.estab, ce.share.all.geography, ce.share.all.mapc, 
                 all.employee.count, share.all.employee.mapc, ce.all.employee.count, ce.share.employee.all.geography, 
                 ce.share.employee.all.mapc, ce.all.sales.total, ce.all.sole.prop.count, ce.all.female.owned) %>%
@@ -290,15 +290,15 @@ by.mass.dataaxle.share[is.na(by.mass.dataaxle.share)] <- 0
 #### SUMMARY STATISTICS FOR MAPC REGION, BY NEFA CREATIVE INDUSTRY GROUP 
 #### summary statistics, for MAPC, using NEFA Core Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.core.mapc <- dataaxle.nefa.core.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, mapc, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
+  dplyr::select(OBJECTID, STCITY, mapc, LOCEMP, SLSVDT,
+                FEMOWN) %>%
   group_by(mapc) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1)) %>%
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1)) %>%
   mutate(geography = "MAPC")
 
 # add column for the total number of establishments and employees for all industries in MAPC
@@ -311,7 +311,7 @@ estab.count.mapc = dataaxle.mapc.towns %>%
 
 employee.count.mapc = dataaxle.mapc.towns %>%
   group_by(mapc) %>%
-  summarize(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE)) %>%
+  summarize(all.employee.count = sum(LOCEMP)) %>%
   mutate(geography = "MAPC")
 
 estab.employee.count.mapc = left_join(estab.count.mapc, employee.count.mapc, by = 'geography')
@@ -337,15 +337,15 @@ summary.dataaxle.ce.nefa.core.mapc.df <- summary.dataaxle.ce.nefa.core.mapc.temp
 
 #### summary statistics, MAPC, using NEFA All (Core + Peripheral) Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.all.mapc <- dataaxle.nefa.all.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, mapc, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
+  dplyr::select(OBJECTID, STCITY, mapc, LOCEMP, SLSVDT,
+                FEMOWN) %>%
   group_by(mapc) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.all.estab = n(),
-            ce.all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.all.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.all.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.all.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1)) %>%
+            ce.all.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.all.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.all.female.owned = mean(FEMOWN),
+            ce.all.sole.prop.count = sum(LOCEMP == 1)) %>%
   mutate(geography = 'MAPC')
 
 # add column for the total number of establishments and employees for all industries in MAPC
@@ -399,15 +399,15 @@ by.mapc.dataaxle.share[is.na(by.mapc.dataaxle.share)] <- 0
 #### SUMMARY STATISTICS, BY COMMUNITY TYPE AND NEFA CREATIVE INDUSTRY GROUP 
 #### summary statistics, by community type, using NEFA Core Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.core.commtype <- dataaxle.nefa.core.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, comm_name, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
+  dplyr::select(OBJECTID, STCITY, comm_name, LOCEMP, SLSVDT,
+                FEMOWN) %>%
   group_by("geography" = comm_name) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each community type
 estab.count.commtype = dataaxle.mapc.towns %>%
@@ -418,7 +418,7 @@ estab.count.commtype = dataaxle.mapc.towns %>%
 
 employee.count.commtype = dataaxle.mapc.towns %>%
   group_by("geography" = comm_name) %>%
-  summarize(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE))
+  summarize(all.employee.count = sum(LOCEMP))
 
 estab.employee.count.commtype = left_join(estab.count.commtype, employee.count.commtype, by = 'geography')
 
@@ -443,15 +443,15 @@ summary.dataaxle.ce.nefa.core.commtype.df <- summary.dataaxle.ce.nefa.core.commt
 
 #### summary statistics, by community type, using NEFA All (Core + Peripheral) Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.all.commtype <- dataaxle.nefa.all.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, comm_name, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
+  dplyr::select(OBJECTID, STCITY, comm_name, LOCEMP, SLSVDT,
+                FEMOWN) %>%
   group_by("geography" = comm_name) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.all.estab = n(),
-            ce.all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.all.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.all.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.all.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.all.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.all.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.all.female.owned = mean(FEMOWN),
+            ce.all.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each community type
 summary.dataaxle.ce.nefa.all.commtype.temp <- left_join(summary.dataaxle.ce.nefa.all.commtype, 
@@ -503,15 +503,15 @@ by.comm.type.dataaxle.share[is.na(by.comm.type.dataaxle.share)] <- 0
 #### SUMMARY STATISTICS, BY SUBREGION AND NEFA CREATIVE INDUSTRY GROUP 
 #### summary statistics, by subregion, using NEFA Core Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.core.subregion <- dataaxle.nefa.core.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, subregion, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
+  dplyr::select(OBJECTID, STCITY, subregion, LOCEMP, SLSVDT,
+                FEMOWN) %>%
   group_by("geography" = subregion) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each neighborhood
 estab.count.subregion = dataaxle.mapc.towns %>%
@@ -522,7 +522,7 @@ estab.count.subregion = dataaxle.mapc.towns %>%
 
 employee.count.subregion = dataaxle.mapc.towns %>%
   group_by("geography" = subregion) %>%
-  summarize(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE))
+  summarize(all.employee.count = sum(LOCEMP))
 
 estab.employee.count.subregion = left_join(estab.count.subregion, employee.count.subregion, by = 'geography')
 
@@ -547,15 +547,15 @@ summary.dataaxle.ce.nefa.core.subregion.df <- summary.dataaxle.ce.nefa.core.subr
 
 #### summary statistics, by municipality, using NEFA All (Core + Peripheral) Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.all.subregion <- dataaxle.nefa.all.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, subregion, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
+  dplyr::select(OBJECTID, STCITY, subregion, LOCEMP, SLSVDT,
+                FEMOWN) %>%
   group_by("geography" = subregion) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.all.estab = n(),
-            ce.all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.all.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.all.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.all.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.all.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.all.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.all.female.owned = mean(FEMOWN),
+            ce.all.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each neighborhood
 summary.dataaxle.ce.nefa.all.subregion.temp <- left_join(summary.dataaxle.ce.nefa.all.subregion, 
@@ -608,15 +608,15 @@ by.subregion.dataaxle.share[is.na(by.subregion.dataaxle.share)] <- 0
 #### SUMMARY STATISTICS, BY NEIGHBORHOOD AND NEFA CREATIVE INDUSTRY GROUP 
 #### summary statistics, by neighborhood, using NEFA Core Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.core.nhood <- dataaxle.nefa.core.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, nhood, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
+  dplyr::select(OBJECTID, STCITY, nhood, LOCEMP, SLSVDT,
+                FEMOWN) %>%
   group_by("geography" = nhood) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each neighborhood
 estab.count.nhood = dataaxle.mapc.towns %>%
@@ -627,7 +627,7 @@ estab.count.nhood = dataaxle.mapc.towns %>%
 
 employee.count.nhood = dataaxle.mapc.towns %>%
   group_by("geography" = nhood) %>%
-  summarize(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE))
+  summarize(all.employee.count = sum(LOCEMP))
 
 estab.employee.count.nhood = left_join(estab.count.nhood, employee.count.nhood, by = 'geography')
 
@@ -652,15 +652,15 @@ summary.dataaxle.ce.nefa.core.nhood.df <- summary.dataaxle.ce.nefa.core.nhood.te
 
 #### summary statistics, by municipality, using NEFA All (Core + Peripheral) Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.all.nhood <- dataaxle.nefa.all.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, nhood, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
+  dplyr::select(OBJECTID, STCITY, nhood, LOCEMP, SLSVDT,
+                FEMOWN) %>%
   group_by("geography" = nhood) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.all.estab = n(),
-            ce.all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.all.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.all.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.all.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.all.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.all.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.all.female.owned = mean(FEMOWN),
+            ce.all.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each neighborhood
 summary.dataaxle.ce.nefa.all.nhood.temp <- left_join(summary.dataaxle.ce.nefa.all.nhood, 
@@ -713,26 +713,26 @@ by.nhood.dataaxle.share[is.na(by.nhood.dataaxle.share$geography),2:ncol(by.nhood
 ####### SUMMARY STATISTICS, BY CENSUS TRACT AND NEFA CREATIVE INDUSTRY GROUP 
 #### summary statistics, by census tract, using NEFA Core Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.core.ct <- dataaxle.nefa.core.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, ct10_id, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
-  group_by("geography" = ct10_id) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  dplyr::select(OBJECTID, STCITY, ct20_id, LOCEMP, SLSVDT,
+                FEMOWN) %>%
+  group_by("geography" = ct20_id) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each census tract
 estab.count.ct = dataaxle.mapc.towns %>%
-  group_by("geography" = ct10_id) %>%
+  group_by("geography" = ct20_id) %>%
   mutate(all.estab = n()) %>%
   dplyr::select(geography, all.estab) %>%
   filter(!duplicated(geography))
 
 employee.count.ct = dataaxle.mapc.towns %>%
-  group_by("geography" = ct10_id) %>%
-  summarize(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE))
+  group_by("geography" = ct20_id) %>%
+  summarize(all.employee.count = sum(LOCEMP))
 
 estab.employee.count.ct = left_join(estab.count.ct, employee.count.ct, by = 'geography')
 
@@ -757,15 +757,15 @@ summary.dataaxle.ce.nefa.core.ct.df <- summary.dataaxle.ce.nefa.core.ct.temp %>%
 
 #### summary statistics, by census tract, using NEFA All (Core + Peripheral) Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.all.ct <- dataaxle.nefa.all.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, ct10_id, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
-  group_by("geography" = ct10_id) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  dplyr::select(OBJECTID, STCITY, ct20_id, LOCEMP, SLSVDT,
+                FEMOWN) %>%
+  group_by("geography" = ct20_id) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.all.estab = n(),
-            ce.all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.all.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.all.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.all.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.all.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.all.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.all.female.owned = mean(FEMOWN),
+            ce.all.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each census tract
 summary.dataaxle.ce.nefa.all.ct.temp <- left_join(summary.dataaxle.ce.nefa.all.ct, estab.employee.count.ct, by = "geography")
@@ -789,7 +789,7 @@ summary.dataaxle.ce.nefa.all.ct.df <- summary.dataaxle.ce.nefa.all.ct.temp %>%
 # number and share of each creative industry
 # dataaxle data
 by.ct.dataaxle.ct <- dataaxle.nefa.core.mapc %>%
-  dplyr::select("geography" = ct10_id, CREATIVE_CAT) %>%
+  dplyr::select("geography" = ct20_id, CREATIVE_CAT) %>%
   mutate("indicator" = rep(1, nrow(dataaxle.nefa.core.mapc))) %>%
   group_by(geography, CREATIVE_CAT) %>%
   summarise("estab" = sum(indicator)) %>%
@@ -817,26 +817,26 @@ by.ct.dataaxle.share[is.na(by.ct.dataaxle.share)] <- 0
 ####### SUMMARY STATISTICS, BY BLOCK GROUP AND NEFA CREATIVE INDUSTRY GROUP 
 #### summary statistics, by block group, using NEFA Core Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.core.bg <- dataaxle.nefa.core.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, bg10_id, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
-  group_by("geography" = bg10_id) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  dplyr::select(OBJECTID, STCITY, bg20_id, LOCEMP, SLSVDT,
+                FEMOWN) %>%
+  group_by("geography" = bg20_id) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.core.estab = n(),
-            ce.core.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.core.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.core.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.core.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.core.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.core.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.core.female.owned = mean(FEMOWN),
+            ce.core.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each block group
 estab.count.bg = dataaxle.mapc.towns %>%
-  group_by("geography" = bg10_id) %>%
+  group_by("geography" = bg20_id) %>%
   mutate(all.estab = n()) %>%
   dplyr::select(geography, all.estab) %>%
   filter(!duplicated(geography))
 
 employee.count.bg = dataaxle.mapc.towns %>%
-  group_by("geography" = bg10_id) %>%
-  summarize(all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE))
+  group_by("geography" = bg20_id) %>%
+  summarize(all.employee.count = sum(LOCEMP))
 
 estab.employee.count.bg = left_join(estab.count.bg, employee.count.bg, by = 'geography')
 
@@ -860,15 +860,15 @@ summary.dataaxle.ce.nefa.core.bg.df <- summary.dataaxle.ce.nefa.core.bg.temp %>%
 
 #### summary statistics, by municipality, using NEFA All (Core + Peripheral) Creative Enterprise NAICS codes
 summary.dataaxle.ce.nefa.all.bg <- dataaxle.nefa.all.mapc %>%
-  dplyr::select(OBJECTID, PRIMARY_CITY, bg10_id, ACTUAL_LOCATION_EMPLOYMENT_SIZE, ACTUAL_LOCATION_SALES_VOLUME,
-                FEMALE_OWNER_EXEC) %>%
-  group_by("geography" = bg10_id) %>%
-  mutate(FEMALE_OWNER_EXEC = ifelse(FEMALE_OWNER_EXEC == "Y", 1, 0)) %>%   # change FEMALE_OWNER_EXEC to indicator variable (0 or 1) for summary stats
+  dplyr::select(OBJECTID, STCITY, bg20_id, LOCEMP, SLSVDT,
+                FEMOWN) %>%
+  group_by("geography" = bg20_id) %>%
+  mutate(FEMOWN = ifelse(FEMOWN == "Y", 1, 0)) %>%   # change FEMOWN to indicator variable (0 or 1) for summary stats
   summarise(ce.all.estab = n(),
-            ce.all.employee.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE, na.rm = TRUE),
-            ce.all.sales.total = sum(ACTUAL_LOCATION_SALES_VOLUME, na.rm = TRUE),
-            ce.all.female.owned = mean(FEMALE_OWNER_EXEC),
-            ce.all.sole.prop.count = sum(ACTUAL_LOCATION_EMPLOYMENT_SIZE == 1))
+            ce.all.employee.count = sum(LOCEMP, na.rm = TRUE),
+            ce.all.sales.total = sum(SLSVDT, na.rm = TRUE),
+            ce.all.female.owned = mean(FEMOWN),
+            ce.all.sole.prop.count = sum(LOCEMP == 1))
 
 # add column for the total number of establishments and employees for all industries in each block group
 summary.dataaxle.ce.nefa.all.bg.temp <- left_join(summary.dataaxle.ce.nefa.all.bg, estab.employee.count.bg, by = "geography")
@@ -892,7 +892,7 @@ summary.dataaxle.ce.nefa.all.bg.df <- summary.dataaxle.ce.nefa.all.bg.temp %>%
 # number and share of each creative industry
 # dataaxle data
 by.bg.dataaxle.bg <- dataaxle.nefa.core.mapc %>%
-  dplyr::select("geography" = bg10_id, CREATIVE_CAT) %>%
+  dplyr::select("geography" = bg20_id, CREATIVE_CAT) %>%
   mutate("indicator" = rep(1, nrow(dataaxle.nefa.core.mapc))) %>%
   group_by(geography, CREATIVE_CAT) %>%
   summarise("estab" = sum(indicator)) %>%
@@ -921,7 +921,7 @@ by.bg.dataaxle.share[is.na(by.bg.dataaxle.share)] <- 0
 setwd(output.path)
 ggplot(summary.dataaxle.ce.nefa.core.categories.mass.df, aes(x = reorder(CREATIVE_CAT, ce.core.estab), y = ce.core.estab)) + 
   geom_bar(stat = "identity", fill = "steelblue", color = "black") +
-  labs(title = "Massachusetts Creative Economy Establishment Counts by Industry Group, 2016 (dataaxle)",
+  labs(title = "Massachusetts Creative Economy Establishment Counts by Industry Group, 2021 (DataAxle)",
        y = "Firms", x = "") +
   geom_text(aes(label=ce.core.estab), hjust = -0.2, size=3.5) +
   theme_minimal() +
@@ -932,7 +932,7 @@ ggsave(file="mass_ce_establishment-counts_industry-group_dataaxle_processed.png"
 
 ggplot(summary.dataaxle.ce.nefa.core.categories.mapc.df, aes(x = reorder(CREATIVE_CAT, ce.core.estab), y = ce.core.estab)) + 
   geom_bar(stat = "identity", fill = "steelblue", color = "black") +
-  labs(title = "MAPC Creative Economy Establishment Counts by Industry Group, 2016 (dataaxle)",
+  labs(title = "MAPC Creative Economy Establishment Counts by Industry Group, 2021 (DataAxle)",
        y = "Firms", x = "") +
   geom_text(aes(label=ce.core.estab), hjust = -0.2, size=3.5) +
   theme_minimal() +
@@ -943,7 +943,7 @@ ggsave(file="mapc_ce_establishment-counts_industry-group_dataaxle_processed.png"
 
 ggplot(summary.dataaxle.ce.nefa.core.categories.mapc.df, aes(x = reorder(CREATIVE_CAT, cat.core.estab.share), y = cat.core.estab.share)) + 
   geom_bar(stat = "identity", fill = "steelblue", color = "black") +
-  labs(title = "MAPC Creative Economy Establishment Share by Industry Group, 2016 (dataaxle)",
+  labs(title = "MAPC Creative Economy Establishment Share by Industry Group, 2021 (DataAxle)",
        y = "", x = "") +
   geom_text(aes(label=cat.core.estab.share.perc), hjust = -0.2, size=3.5) +
   theme_minimal() +

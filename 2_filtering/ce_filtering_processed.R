@@ -13,7 +13,7 @@ naics.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planni
 
 # load dataaxle data for Massachusetts and its municipalities (2016)
 setwd(modified.data.path)
-dataaxle.mass <- read.csv("2022_dataaxle_mapc_towns_processed_w2020census.csv", stringsAsFactors = FALSE)
+dataaxle.mass <- read.csv("2022_dataaxle_mapc_towns_processed.csv", stringsAsFactors = FALSE)
 
 ####### DATA WRANGLING: ASSIGN NEFA CREATIVE CATEGORIES TO EACH ESTABLISHMENT #######
 # From Appendix D (NEFA Core Industries by Creative Category) of 2017 NEFA Report "The Jobs in New England's Creative Economy and Why They Matter"
