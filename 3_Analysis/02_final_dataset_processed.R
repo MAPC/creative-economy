@@ -16,7 +16,7 @@ source("01_summary_stats.R")
 
 ####### EXCEL SPREADSHEET #######
 
-summary.infousa.ce.all.variables <- c("geography", 
+summary.dataaxle.ce.all.variables <- c("geography", 
                                       "all.estab",
                                       "share.all.mapc", 
                                       "ce.all.estab",
@@ -30,7 +30,7 @@ summary.infousa.ce.all.variables <- c("geography",
                                       "ce.all.sales.total",
                                       "ce.all.sole.prop.count")
 
-summary.infousa.ce.core.variables <- c("geography",
+summary.dataaxle.ce.core.variables <- c("geography",
                                        "ce.core.estab",
                                        "ce.share.core.geography",
                                        "ce.share.core.mapc",
@@ -41,10 +41,10 @@ summary.infousa.ce.core.variables <- c("geography",
                                        "ce.core.sole.prop.count")
 
 
-summary.infousa.ce.mass <- left_join(summary.infousa.ce.nefa.all.mass.df[,summary.infousa.ce.all.variables],
-                                     summary.infousa.ce.nefa.core.mass.df[,summary.infousa.ce.core.variables],
+summary.dataaxle.ce.mass <- left_join(summary.dataaxle.ce.nefa.all.mass.df[,summary.dataaxle.ce.all.variables],
+                                     summary.dataaxle.ce.nefa.core.mass.df[,summary.dataaxle.ce.core.variables],
                                      by = "geography") %>%
-  left_join(by.mass.infousa.share, by = "geography") %>%
+  left_join(by.mass.dataaxle.share, by = "geography") %>%
   mutate(share.all.mapc = NA,
          ce.share.all.geography = round((ce.all.estab / all.estab)*100, digits = 2),
          ce.share.all.mapc = NA,
@@ -56,10 +56,10 @@ summary.infousa.ce.mass <- left_join(summary.infousa.ce.nefa.all.mass.df[,summar
          ce.share.employee.core.geography = round((ce.core.employee.count / all.employee.count)*100, digits = 2),
          ce.share.employee.core.mapc = NA)
 
-summary.infousa.ce.mapc <- left_join(summary.infousa.ce.nefa.all.mapc.df[,summary.infousa.ce.all.variables],
-                                     summary.infousa.ce.nefa.core.mapc.df[,summary.infousa.ce.core.variables],
+summary.dataaxle.ce.mapc <- left_join(summary.dataaxle.ce.nefa.all.mapc.df[,summary.dataaxle.ce.all.variables],
+                                     summary.dataaxle.ce.nefa.core.mapc.df[,summary.dataaxle.ce.core.variables],
                                      by = "geography") %>%
-  left_join(by.mapc.infousa.share, by = "geography") %>%
+  left_join(by.mapc.dataaxle.share, by = "geography") %>%
   mutate(share.all.mapc = round((all.estab / sum(all.estab))*100, digits = 2),
          ce.share.all.geography = round((ce.all.estab / all.estab)*100, digits = 2),
          ce.share.all.mapc = round((ce.all.estab / sum(ce.all.estab))*100, digits = 2),
@@ -72,10 +72,10 @@ summary.infousa.ce.mapc <- left_join(summary.infousa.ce.nefa.all.mapc.df[,summar
          ce.share.employee.core.mapc = round((ce.core.employee.count / sum(ce.core.employee.count))*100, digits = 2)) %>%
   dplyr::select(-mapc) 
 
-summary.infousa.ce.muni <- left_join(summary.infousa.ce.nefa.all.municipality.df[,summary.infousa.ce.all.variables],
-                                     summary.infousa.ce.nefa.core.municipality.df[,summary.infousa.ce.core.variables],
+summary.dataaxle.ce.muni <- left_join(summary.dataaxle.ce.nefa.all.municipality.df[,summary.dataaxle.ce.all.variables],
+                                     summary.dataaxle.ce.nefa.core.municipality.df[,summary.dataaxle.ce.core.variables],
                                      by = "geography") %>%
-  left_join(by.town.infousa.share, by = "geography") %>%
+  left_join(by.town.dataaxle.share, by = "geography") %>%
   mutate(share.all.mapc = round((all.estab / sum(all.estab))*100, digits = 2),
          ce.share.all.geography = round((ce.all.estab / all.estab)*100, digits = 2),
          ce.share.all.mapc = round((ce.all.estab / sum(ce.all.estab))*100, digits = 2),
@@ -87,10 +87,10 @@ summary.infousa.ce.muni <- left_join(summary.infousa.ce.nefa.all.municipality.df
          ce.share.employee.core.geography = round((ce.core.employee.count / all.employee.count)*100, digits = 2),
          ce.share.employee.core.mapc = round((ce.core.employee.count / sum(ce.core.employee.count))*100, digits = 2)) 
 
-summary.infousa.ce.subregion <- left_join(summary.infousa.ce.nefa.all.subregion.df[,summary.infousa.ce.all.variables],
-                                          summary.infousa.ce.nefa.core.subregion.df[,summary.infousa.ce.core.variables],
+summary.dataaxle.ce.subregion <- left_join(summary.dataaxle.ce.nefa.all.subregion.df[,summary.dataaxle.ce.all.variables],
+                                          summary.dataaxle.ce.nefa.core.subregion.df[,summary.dataaxle.ce.core.variables],
                                           by = "geography") %>%
-  left_join(by.subregion.infousa.share, by = "geography") %>%
+  left_join(by.subregion.dataaxle.share, by = "geography") %>%
   mutate(share.all.mapc = round((all.estab / sum(all.estab))*100, digits = 2),
          ce.share.all.geography = round((ce.all.estab / all.estab)*100, digits = 2),
          ce.share.all.mapc = round((ce.all.estab / sum(ce.all.estab))*100, digits = 2),
@@ -102,10 +102,10 @@ summary.infousa.ce.subregion <- left_join(summary.infousa.ce.nefa.all.subregion.
          ce.share.employee.core.geography = round((ce.core.employee.count / all.employee.count)*100, digits = 2),
          ce.share.employee.core.mapc = round((ce.core.employee.count / sum(ce.core.employee.count))*100, digits = 2)) 
 
-summary.infousa.ce.commtype <- left_join(summary.infousa.ce.nefa.all.commtype.df[,summary.infousa.ce.all.variables],
-                                         summary.infousa.ce.nefa.core.commtype.df[,summary.infousa.ce.core.variables],
+summary.dataaxle.ce.commtype <- left_join(summary.dataaxle.ce.nefa.all.commtype.df[,summary.dataaxle.ce.all.variables],
+                                         summary.dataaxle.ce.nefa.core.commtype.df[,summary.dataaxle.ce.core.variables],
                                          by = "geography") %>%
-  left_join(by.comm.type.infousa.share, by = "geography") %>%
+  left_join(by.comm.type.dataaxle.share, by = "geography") %>%
   mutate(share.all.mapc = round((all.estab / sum(all.estab))*100, digits = 2),
          ce.share.all.geography = round((ce.all.estab / all.estab)*100, digits = 2),
          ce.share.all.mapc = round((ce.all.estab / sum(ce.all.estab))*100, digits = 2),
@@ -117,10 +117,10 @@ summary.infousa.ce.commtype <- left_join(summary.infousa.ce.nefa.all.commtype.df
          ce.share.employee.core.geography = round((ce.core.employee.count / all.employee.count)*100, digits = 2),
          ce.share.employee.core.mapc = round((ce.core.employee.count / sum(ce.core.employee.count))*100, digits = 2)) 
 
-summary.infousa.ce.nhood <- left_join(summary.infousa.ce.nefa.all.nhood.df[,summary.infousa.ce.all.variables],
-                                      summary.infousa.ce.nefa.core.nhood.df[,summary.infousa.ce.core.variables],
+summary.dataaxle.ce.nhood <- left_join(summary.dataaxle.ce.nefa.all.nhood.df[,summary.dataaxle.ce.all.variables],
+                                      summary.dataaxle.ce.nefa.core.nhood.df[,summary.dataaxle.ce.core.variables],
                                       by = "geography") %>%
-  left_join(by.nhood.infousa.share, by = "geography") %>%
+  left_join(by.nhood.dataaxle.share, by = "geography") %>%
   mutate(share.all.mapc = round((all.estab / sum(all.estab))*100, digits = 2),
          ce.share.all.geography = round((ce.all.estab / all.estab)*100, digits = 2),
          ce.share.all.mapc = round((ce.all.estab / sum(ce.all.estab))*100, digits = 2),
@@ -132,10 +132,10 @@ summary.infousa.ce.nhood <- left_join(summary.infousa.ce.nefa.all.nhood.df[,summ
          ce.share.employee.core.geography = round((ce.core.employee.count / all.employee.count)*100, digits = 2),
          ce.share.employee.core.mapc = round((ce.core.employee.count / sum(ce.core.employee.count))*100, digits = 2)) 
 
-summary.infousa.ce.ct <- left_join(summary.infousa.ce.nefa.all.ct.df[,summary.infousa.ce.all.variables],
-                                   summary.infousa.ce.nefa.core.ct.df[,summary.infousa.ce.core.variables],
+summary.dataaxle.ce.ct <- left_join(summary.dataaxle.ce.nefa.all.ct.df[,summary.dataaxle.ce.all.variables],
+                                   summary.dataaxle.ce.nefa.core.ct.df[,summary.dataaxle.ce.core.variables],
                                    by = "geography") %>%
-  left_join(by.ct.infousa.share, by = "geography") %>%
+  left_join(by.ct.dataaxle.share, by = "geography") %>%
   mutate(ce.core.estab = ifelse(is.na(ce.core.estab), 0, ce.core.estab),
          ce.core.employee.count  = ifelse(is.na(ce.core.employee.count ), 0, ce.core.employee.count)) %>%
   mutate(share.all.mapc = round((all.estab / sum(all.estab))*100, digits = 2),
@@ -150,10 +150,10 @@ summary.infousa.ce.ct <- left_join(summary.infousa.ce.nefa.all.ct.df[,summary.in
          ce.share.employee.core.mapc = round((ce.core.employee.count / sum(ce.core.employee.count))*100, digits = 2)) %>%
   mutate(geography = as.character(geography))
 
-summary.infousa.ce.bg <- left_join(summary.infousa.ce.nefa.all.bg.df[,summary.infousa.ce.all.variables],
-                                   summary.infousa.ce.nefa.core.bg.df[,summary.infousa.ce.core.variables],
+summary.dataaxle.ce.bg <- left_join(summary.dataaxle.ce.nefa.all.bg.df[,summary.dataaxle.ce.all.variables],
+                                   summary.dataaxle.ce.nefa.core.bg.df[,summary.dataaxle.ce.core.variables],
                                    by = "geography") %>%
-  left_join(by.bg.infousa.share, by = "geography") %>%
+  left_join(by.bg.dataaxle.share, by = "geography") %>%
   mutate(ce.core.estab = ifelse(is.na(ce.core.estab), 0, ce.core.estab),
          ce.core.employee.count  = ifelse(is.na(ce.core.employee.count ), 0, ce.core.employee.count)) %>%
   mutate(share.all.mapc = round((all.estab / sum(all.estab))*100, digits = 2),
@@ -168,16 +168,16 @@ summary.infousa.ce.bg <- left_join(summary.infousa.ce.nefa.all.bg.df[,summary.in
          ce.share.employee.core.mapc = round((ce.core.employee.count / sum(ce.core.employee.count))*100, digits = 2))%>%
   mutate(geography = as.character(geography))
 
-summary.infousa.ce.final <- rbind(summary.infousa.ce.muni,
-                                  summary.infousa.ce.mapc,
-                                  summary.infousa.ce.mass,
-                                  summary.infousa.ce.subregion,
-                                  summary.infousa.ce.commtype, 
-                                  summary.infousa.ce.nhood,
-                                  summary.infousa.ce.ct,
-                                  summary.infousa.ce.bg)
+summary.dataaxle.ce.final <- rbind(summary.dataaxle.ce.muni,
+                                  summary.dataaxle.ce.mapc,
+                                  summary.dataaxle.ce.mass,
+                                  summary.dataaxle.ce.subregion,
+                                  summary.dataaxle.ce.commtype, 
+                                  summary.dataaxle.ce.nhood,
+                                  summary.dataaxle.ce.ct,
+                                  summary.dataaxle.ce.bg)
 
 setwd(modified.data.path)
-summary.infousa.ce.final$geography <- as.character(summary.infousa.ce.final$geography)
-write.csv(summary.infousa.ce.final, paste0(output.path, "/20200430_summary_infousa_ce_final_mapc_processed_all_geographies.csv"), row.names = FALSE)
+summary.dataaxle.ce.final$geography <- as.character(summary.dataaxle.ce.final$geography)
+write.csv(summary.dataaxle.ce.final, paste0(output.path, "/summary_dataaxle_ce_final_mapc_processed_all_geographies.csv"), row.names = FALSE)
 
