@@ -12,6 +12,7 @@
 # clear workspace
 rm(list=ls())
 options(scipen = 999)
+
 # load in the final municipal output functions R file
 analysis.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/R code/git/creative-economy/3_Analysis"
 setwd(analysis.path)
@@ -21,14 +22,14 @@ pacman::p_load(readxl)
 #################################### MUNICIPAL #################################### 
 # Place name of municipality in quotation marks for function below
 # output is store in Output folder of data project
-municipal.output("Needham")
+municipal.output("Cambridge")
 
 
 #################################### NEIGHBORHOOD #################################### 
 # Place name of neighborhood in quotation marks for function below
 # USE NEIGHBORHOOD LOOKUP TABLE IN THIS FOLDER FOR NEIGHBORHOOD NAMES: K:\DataServices\Projects\Current_Projects\Arts_and_Culture_Planning\Creative Economy\Input
 # output is store in Output folder of data project
-nhood.output("Ball Square", "Somerville")
+nhood.output("North Cambridge", "Cambridge")
 
 
 #################################### CENSUS TRACT #################################### 

@@ -8,10 +8,15 @@
 ###################################################################################################
 # install and load required packages
 # install.packages("pacman")
-pacman::p_load(sp, spatstat, rgeos, rgdal, leaflet, leaflet.extras, 
+pacman::p_load(sp, sf, spatstat, rgeos, rgdal, leaflet, leaflet.extras, 
                maptools, GISTools, tmap, tmaptools, ggmap, ggplot2, 
                tidyr, dplyr, RColorBrewer, mapview, webshot, openxlsx, scales)
 webshot::install_phantomjs(force = T)
+
+#set tmap_options - note that this might be something to check in on later
+tmap_options(check.and.fix = TRUE, basemaps = c(Canvas = "Esri.WorldTopoMap", Imagery = "Esri.WorldImagery"))
+tmap_mode("view")
+sf::sf_use_s2(FALSE)
 # load paths to gather and save files
 
 #update with years where necessary
@@ -78,24 +83,25 @@ municipal.map <- function (municipality) {
   establishments.municipal.no.soleprop <- establishments.municipal[establishments.municipal@data$LOCEMP > 1,]
   muni <- mapc.towns[mapc.towns@data$town==municipality,]
   
-  ce_distribution_map <- tm_shape(muni) + 
+  ce_distribution_map <- 
+    tm_basemap("Esri.WorldTopoMap") +
+    tm_shape(muni) + 
     tm_borders("black", lwd = 4) +
     tm_shape(mapc.towns) +
     tm_borders("black") +
     tm_shape(establishments.municipal.no.soleprop, size = 1) +
     tm_dots(col = "CREATIVE_CAT", palette = "Paired", border.col = "black", 
+            alpha = 0.8,
             jitter = 0,
             title = paste0(municipality, ": Creative Industry Group Type"),
             size = 0.1,
+            id = ("Company" = "CONAME"),
             popup.vars = c("Company" = "CONAME", 
                            "Street Address" = "STADDR",
                            "Creative Industry Group" = "CREATIVE_CAT")) +
     tmap_style("white") +
-    tm_layout(title = "CONFIDENTIAL - DO NOT SHARE", legend.frame = TRUE) +
-    # tm_view(basemaps = "CartoDB.Positron")
-    tm_view(basemaps = "Esri.WorldTopoMap")
-  
-  
+    tm_layout(title = "CONFIDENTIAL - DO NOT SHARE", legend.frame = TRUE) 
+
   tmap_leaflet(ce_distribution_map, mode = "view", show = TRUE) 
   
   mapshot(tmap_leaflet(ce_distribution_map, mode = "view", show = TRUE), 
@@ -285,23 +291,26 @@ nhood.map <- function (nhood_name) {
   establishments.nhood.no.soleprop <- establishments.nhood[establishments.nhood$LOCEMP > 1,]
   nhood.shape <- mapc.nhood[mapc.nhood$nhood_name %in% nhood_name,]
   
-  ce_distribution_map <- tm_shape(nhood.shape) + 
+  ce_distribution_map <- 
+    tm_basemap("Esri.WorldTopoMap") +
+    tm_shape(nhood.shape) + 
     tm_borders("black", lwd = 4) +
     tm_shape(mapc.nhood) +
     tm_borders("black") +
     tm_shape(establishments.nhood.no.soleprop, size = 1) +
     tm_dots(col = "CREATIVE_CAT", palette = "Paired", border.col = "black", 
+            alpha = 0.8,
             jitter = 0,
             title = paste0(nhood_name, ": Creative Industry Group Type"),
             size = 0.1,
+            id = ("Company" = "CONAME"),
             popup.vars = c("Company" = "CONAME", 
                            "Street Address" = "STADDR",
                            "Creative Industry Group" = "CREATIVE_CAT")) +
     tmap_style("white") +
-    tm_layout(title = "CONFIDENTIAL - DO NOT SHARE", legend.frame = TRUE) +
-    # tm_view(basemaps = "CartoDB.Positron")
-    tm_view(basemaps = "Esri.WorldTopoMap")
-  
+    tm_layout(title = "CONFIDENTIAL - DO NOT SHARE", legend.frame = TRUE) 
+    
+
   
   tmap_leaflet(ce_distribution_map, mode = "view", show = TRUE) 
   
