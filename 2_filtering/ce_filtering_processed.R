@@ -7,8 +7,8 @@ pacman::p_load(tidyr, dplyr, reshape2)
 library(magrittr) # needs to be run every time you start R and want to use %>%
 library(dplyr)    # alternatively, this also loads %>%
 
-#update modified data path to current year
-modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified/2022"
+#update modified data path to current year if there is new DataAxle data
+modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified/2021_DataAxle"
 naics.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/NAICS/Converted NAICS CE code tables/Conversions to 2012"
 
 # load dataaxle data for Massachusetts and its municipalities (2016)
