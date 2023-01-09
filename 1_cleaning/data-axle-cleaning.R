@@ -15,8 +15,8 @@ library(tidyverse)
 options(scipen = 999)
 
 raw.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Raw"
-#update modified path with year
-modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified/2022"
+#if raw data changes, update modified path below with year
+modified.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/Modified/2021_DataAxle"
 gis.data.path <- "K:/DataServices/Projects/Current_Projects/Arts_and_Culture_Planning/Creative_Economy/Data/GIS"
 
 # load DataAxle raw files (April 2021)
