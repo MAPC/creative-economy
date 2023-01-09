@@ -22,14 +22,14 @@ pacman::p_load(readxl)
 #################################### MUNICIPAL #################################### 
 # Place name of municipality in quotation marks for function below
 # output is store in Output folder of data project
-municipal.output("Cambridge")
+municipal.output("Needham")
 
 
 #################################### NEIGHBORHOOD #################################### 
 # Place name of neighborhood in quotation marks for function below
 # USE NEIGHBORHOOD LOOKUP TABLE IN THIS FOLDER FOR NEIGHBORHOOD NAMES: K:\DataServices\Projects\Current_Projects\Arts_and_Culture_Planning\Creative Economy\Input
 # output is store in Output folder of data project
-nhood.output("North Cambridge", "Cambridge")
+nhood.output("East Cambridge", "Cambridge")
 
 
 #################################### CENSUS TRACT #################################### 
